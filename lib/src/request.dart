@@ -1,7 +1,8 @@
 part of 'reqwest_base.dart';
 
 class Request {
-  final Body body;
+  final Body? body;
+  /// The headers of the request. This is an immutable map.
   final Map<String, String> headers;
   final Method method;
   final Duration? timeout;
@@ -9,7 +10,7 @@ class Request {
   final Version version;
 
   const Request(
-      {this.body = const Body.empty(),
+      {this.body,
       this.headers = const {},
       required this.method,
       this.timeout,
