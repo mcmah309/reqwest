@@ -6,7 +6,8 @@ repository: https://github.com/mcmah309/reqwest
 environment:
   sdk: ^3.5.0
 
-# dependencies:
+dependencies:
+  rust: ^3.0.0
 
 dev_dependencies:
   lints: ^4.0.0

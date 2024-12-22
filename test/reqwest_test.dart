@@ -2,12 +2,8 @@ import 'package:reqwest/reqwest.dart';
 import 'package:test/test.dart';
 
 void main() {
-  group('A group of tests', () {
-
-    setUp(() {
+  test('Get request', () {
+      final client = Client();
+      client.post("https://www.rust-lang.org");
     });
-
-    test('First Test', () {
-    });
-  });
 }
