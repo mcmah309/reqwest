@@ -2,7 +2,7 @@
 class ReqError implements Exception{
   final String message;
 
-  ReqError(this.message);
+  const ReqError(this.message);
 
   @override
   String toString() {

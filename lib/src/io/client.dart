@@ -8,6 +8,8 @@ import 'package:reqwest/src/body.dart';
 import 'package:reqwest/src/error.dart';
 import 'package:reqwest/src/method.dart';
 import 'package:reqwest/src/response.dart';
+import 'package:reqwest/src/status_code.dart';
+import 'package:reqwest/src/version.dart';
 import 'package:rust/rust.dart';
 
 class PlatformClient {
@@ -65,8 +67,23 @@ class PlatformClient {
       response.headers.forEach((name, values) {
         headers[name] = values;
       });
+      final int? contentLength = response.contentLength < 0 ? null : response.contentLength;
+      final List<Cookie> cookies = response.cookies;
+      final int statusCode = response.statusCode;
+      assert(statusCode >= 0, 'Status code is negative');
+      final StatusCode status = StatusCode(statusCode);
       final Stream<Uint8List> responseStream = response.cast();
-      return Ok(Response(responseStream: responseStream, headers: headers));
+      final InternetAddress? remoteAddress = response.connectionInfo?.remoteAddress;
+      final Version version = request.version;
+      return Ok(Response(
+          responseStream: responseStream,
+          headers: headers,
+          contentLength: contentLength,
+          cookies: cookies,
+          status: status,
+          remoteAddress: remoteAddress,
+          url: url,
+          version: version));
     } catch (e) {
       return Err(ReqError(e.toString()));
     }
