@@ -1,26 +1,14 @@
 part of 'reqwest_base.dart';
 
-/// A reference to the [build] and [send] methods so a request can be configured and sent
-/// in one shot
-/// ```dart
-/// final client = Client();
-/// final result = await client.post(...)
-///   ..header("User-Agent", "reqwest-dart")
-///   ..header("Content-Type", "application/json")
-///   ..header("Accept", "text/html").
-///   ..body(Body.wrap("Hello, world!".asBytes)).send();
-/// ```
-abstract class RequestBuilderRef {
-  Request build();
-
-  Future<Result<Response, ReqError>> send();
-}
-
-class RequestBuilder implements RequestBuilderRef {
+/// A builder to construct the properties of a Request.
+///
+/// To construct a RequestBuilder, use [RequestBuilder.fromParts] or methods from a [Client]
+/// such as [Client.get], [Client.post], etc.
+class RequestBuilder {
   final Client _client;
 
   late Body? _body;
-  late Map<String, String> _headers;
+  late Map<String, List<String>> _headers;
   late Method _method;
   late Duration? _timeout;
   late String _url;
@@ -38,7 +26,7 @@ class RequestBuilder implements RequestBuilderRef {
   RequestBuilder._clone(
       {required Client client,
       required Body? body,
-      required Map<String, String> headers,
+      required Map<String, List<String>> headers,
       required Method method,
       required Duration? timeout,
       required String url,
@@ -51,28 +39,24 @@ class RequestBuilder implements RequestBuilderRef {
         _url = url,
         _version = version;
 
-  RequestBuilderRef basicAuth(String username, [String? password]) {
+  void basicAuth(String username, [String? password]) {
     final String encoded;
     if (password == null) {
       encoded = base64.encode(utf8.encode("$username:"));
     } else {
       encoded = base64.encode(utf8.encode("$username:$password"));
     }
-    _headers[Headers.AUTHORIZATION] = "Basic $encoded";
-    return this;
+    _headerAdd(Headers.AUTHORIZATION, "Basic $encoded");
   }
 
-  RequestBuilderRef bearerAuth(String token) {
-    _headers[Headers.AUTHORIZATION] = "Bearer $token";
-    return this;
+  void bearerAuth(String token) {
+    _headerAdd(Headers.AUTHORIZATION, "Bearer $token");
   }
 
-  RequestBuilderRef body(Body body) {
+  void body(Body body) {
     _body = body;
-    return this;
   }
 
-  @override
   Request build() => Request(
       body: _body,
       headers: Map.unmodifiable(_headers),
@@ -80,30 +64,36 @@ class RequestBuilder implements RequestBuilderRef {
       timeout: _timeout,
       url: _url,
       version: _version);
-// build_split: // todo
+
+  (Client, Request) buildSplit() => (_client, build());
+
 // fetch_mode_no_cors // todo - web mode only
-// form // todo
+
+  void form(Map<String, String> data) {
+    _headerAdd(Headers.CONTENT_TYPE, "application/x-www-form-urlencoded");
+    final queryString = Uri(queryParameters: data).query;
+    _body = queryString.toBody();
+  }
+
 // from_parts: Added as constructor
 
-  RequestBuilderRef header(String key, String value) {
-    _headers[key] = value;
-    return this;
+  /// Adds a header to the request. Headers are merged with existing ones - does not overwrite existing headers.
+  void header(String key, String value) {
+    _headerAdd(key, value);
   }
 
-  RequestBuilderRef headers(Map<String, String> headers) {
-    _headers = headers;
-    return this;
+  /// Adds all headers to the request. Headers are merged with existing ones - does not overwrite existing headers.
+  void headers(Map<String, List<String>> headers) {
+    _headerAddAll(headers);
   }
 
-  RequestBuilderRef json(Map<String, Object?> json) {
-    _headers[Headers.CONTENT_TYPE] = "application/json";
+  void json(Map<String, Object?> json) {
+    _headerAdd(Headers.CONTENT_TYPE, "application/json");
     _body = json.toBody();
-    return this;
   }
 
 // multipart // todo
 // query //todo
-  @override
   Future<Result<Response, ReqError>> send() => _client.execute(build());
 // timeout //todo
 
@@ -125,4 +115,16 @@ class RequestBuilder implements RequestBuilderRef {
     }
   }
 // version // todo
+
+  void _headerAdd(String key, String value) {
+    final headerValues = (_headers[key] ??= <String>[]);
+    headerValues.add(value);
+  }
+
+  void _headerAddAll(Map<String, List<String>> headers) {
+    headers.forEach((key, values) {
+      final headerValues = _headers[key] ??= <String>[];
+      headerValues.addAll(values);
+    });
+  }
 }

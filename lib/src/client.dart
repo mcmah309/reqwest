@@ -2,6 +2,11 @@
 part of 'reqwest_base.dart';
 
 
+/// An asynchronous Client to make Requests with.
+///
+/// The Client has various configuration values to tweak, but the defaults are set to what is usually
+/// the most commonly desired value. To configure a Client, use [Client.builder].
+/// The Client holds a connection pool internally, so it is advised that you create one and reuse it.
 class Client {
 
   final PlatformClient _platform_client = PlatformClient();

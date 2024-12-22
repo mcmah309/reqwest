@@ -46,10 +46,13 @@ class PlatformClient {
         case Method.trace:
           httpRequest = await client.openUrl('TRACE', url);
       }
+      request.headers.forEach((key, value) {
+        httpRequest.headers.set(key, value);
+      });
       // todo headers and such
       final body = request.body;
       if (body != null) {
-        switch(body) {
+        switch (body) {
           case StreamingBody():
             break; //todo
           case BytesBody():
@@ -58,10 +61,12 @@ class PlatformClient {
         }
       }
       final HttpClientResponse response = await httpRequest.close();
+      final Map<String, List<String>> headers = {};
+      response.headers.forEach((name, values) {
+        headers[name] = values;
+      });
       final Stream<Uint8List> responseStream = response.cast();
-      final Uint8List bytes = await responseStream.reduce((prev, next) => Uint8List.fromList([...prev, ...next]));
-      final string = utf8.decode(bytes);
-      return Ok(Response());
+      return Ok(Response(responseStream: responseStream, headers: headers));
     } catch (e) {
       return Err(ReqError(e.toString()));
     }
