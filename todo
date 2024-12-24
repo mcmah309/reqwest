@@ -1,0 +1,6 @@
+- figure out Mime and multifile upload
+- Change the interior of requests to hold a uri, if it fails, do not fail until request time
+- Finalize everything but clientBuilder
+- Write an axum test suite
+- Start implementing clientBuilder
+- Implement web

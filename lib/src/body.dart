@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:meta/meta.dart';
+
 extension StringToBody on String {
   /// Creates a new body from the given string.
   Body toBody() => Body.wrap(Uint8List.fromList(utf8.encode(this)));
@@ -12,9 +14,14 @@ extension MapToBody on Map<String, Object?> {
   Body toBody() => Body.wrap(Uint8List.fromList(utf8.encode(jsonEncode(json))));
 }
 
-extension StreamToBody on Stream<Uint8List> {
+extension StreamBytesToBody on Stream<Uint8List> {
   /// Creates a new body from the given stream.
   Body toBody() => Body.wrapStream(this);
+}
+
+extension StreamListIntToBody on Stream<List<int>> {
+  /// Creates a new body from the given stream.
+  Body toBody() => Body.wrapStream(cast());
 }
 
 extension BytesToBody on Uint8List {
@@ -46,6 +53,7 @@ sealed class Body {
 }
 
 final class StreamingBody implements Body {
+  @internal
   final Stream<Uint8List> stream;
 
   const StreamingBody._(this.stream);

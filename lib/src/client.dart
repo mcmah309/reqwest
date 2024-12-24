@@ -9,15 +9,19 @@ part of 'reqwest_base.dart';
 /// The Client holds a connection pool internally, so it is advised that you create one and reuse it.
 class Client {
 
+  final Policy policy;
+
   final PlatformClient _platform_client = PlatformClient();
 
-  Client();
+  factory Client() = Client._;
+
+  Client._({this.policy = const Policy()});
 
   ClientBuilder builder() => ClientBuilder();
 
   RequestBuilder delete(String url) => RequestBuilder.fromParts(this, Request(method: Method.delete, url: url));
 
-  Future<Result<Response, ReqError>> execute(Request request) => _platform_client.execute(request);
+  Future<Result<Response, ReqError>> execute(Request request) => _platform_client.execute(this, request);
 
   RequestBuilder get(String url) => RequestBuilder.fromParts(this, Request(method: Method.get, url: url));
 

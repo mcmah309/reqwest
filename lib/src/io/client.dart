@@ -20,13 +20,15 @@ class PlatformClient {
 
   final client = HttpClient();
 
-  Future<Result<Response, ReqError>> execute(Request request) async {
+  Future<Result<Response, ReqError>> execute(Client superClient, Request request) async {
     try {
       final url = Uri.parse(request.url);
       final host = url.host;
       final port = url.port;
       final path = url.path;
-
+      
+      // Dev note: The timeout applies only to connections initiated after the timeout is set.
+      client.connectionTimeout = request.timeout;
       HttpClientRequest httpRequest;
       switch (request.method) {
         case Method.get:
@@ -48,15 +50,16 @@ class PlatformClient {
         case Method.trace:
           httpRequest = await client.openUrl('TRACE', url);
       }
+      httpRequest.maxRedirects = superClient.policy.maxRedirects;
+      httpRequest.followRedirects = superClient.policy.followRedirects;
       request.headers.forEach((key, value) {
         httpRequest.headers.set(key, value);
       });
-      // todo headers and such
       final body = request.body;
       if (body != null) {
         switch (body) {
-          case StreamingBody():
-            break; //todo
+          case StreamingBody(:final stream):
+            httpRequest.addStream(stream);
           case BytesBody():
             final bytes = body.asBytes();
             httpRequest.write(bytes);

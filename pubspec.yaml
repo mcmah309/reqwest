@@ -7,7 +7,10 @@ environment:
   sdk: ^3.5.0
 
 dependencies:
-  rust: ^3.0.0
+  rust: ^3.1.0
+  dio: ^5.7.0
+  meta: ^1.0.0
+  mime: ^2.0.0
 
 dev_dependencies:
   lints: ^4.0.0

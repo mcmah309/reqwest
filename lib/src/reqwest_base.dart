@@ -1,9 +1,11 @@
 import 'dart:convert';
 
 import 'package:reqwest/src/error.dart';
+import 'package:reqwest/src/policy.dart';
 import 'package:reqwest/src/response.dart';
 import 'package:rust/rust.dart';
 
+import 'form.dart';
 import 'headers.dart';
 import 'body.dart';
 import 'method.dart';

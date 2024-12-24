@@ -39,6 +39,7 @@ class RequestBuilder {
         _url = url,
         _version = version;
 
+  /// Enable HTTP basic authentication.
   void basicAuth(String username, [String? password]) {
     final String encoded;
     if (password == null) {
@@ -49,14 +50,17 @@ class RequestBuilder {
     _headerAdd(Headers.AUTHORIZATION, "Basic $encoded");
   }
 
+  /// Enable HTTP bearer authentication.
   void bearerAuth(String token) {
     _headerAdd(Headers.AUTHORIZATION, "Bearer $token");
   }
 
+  /// Set the request body.
   void body(Body body) {
     _body = body;
   }
 
+  /// Build a Request, which can be inspected, modified and executed with [Client.execute].
   Request build() => Request(
       body: _body,
       headers: Map.unmodifiable(_headers),
@@ -65,10 +69,15 @@ class RequestBuilder {
       url: _url,
       version: _version);
 
+  /// Build a Request, which can be inspected, modified and executed with [Client.execute].
+  /// But also returns the client used to build the request.
   (Client, Request) buildSplit() => (_client, build());
 
 // fetch_mode_no_cors // todo - web mode only
 
+  /// Send a form body.
+  /// 
+  /// Sets the body to the url encoded serialization of the passed value, and also sets the Content-Type: application/x-www-form-urlencoded header.
   void form(Map<String, String> data) {
     _headerAdd(Headers.CONTENT_TYPE, "application/x-www-form-urlencoded");
     final queryString = Uri(queryParameters: data).query;
@@ -87,15 +96,35 @@ class RequestBuilder {
     _headerAddAll(headers);
   }
 
+  /// Send a JSON body.
   void json(Map<String, Object?> json) {
     _headerAdd(Headers.CONTENT_TYPE, "application/json");
     _body = json.toBody();
   }
 
-// multipart // todo
-// query //todo
+  /// Sets the body to a multipart/form-data body.
+  /// 
+  /// In additional the request’s body, the Content-Type and Content-Length fields are appropriately set.
+  void multipart(Form form) {
+    // todo
+  }
+
+  /// Modifies the URL of this request, adding the parameters provided. This method appends and does not overwrite. 
+  // void query(Map<String,String> newParams) {
+  //   final url = Uri.tryParse(_url); // todo should be start with a uri from the get go? Maybe for ergonomics we dont add these all together until send time
+  //   url.queryParameters // todo this is unmofiable, how to handle?
+  // }
+
+  /// Constructs the Request and sends it to the target URL, returning a future Response.
   Future<Result<Response, ReqError>> send() => _client.execute(build());
-// timeout //todo
+
+  /// Enables a request timeout.
+  /// 
+  /// The timeout is applied from when the request starts connecting until the response body has finished.
+  /// It affects only this request and overrides the timeout configured using [ClientBuilder.timeout].
+  void timeout(Duration timeout) {
+    _timeout = timeout;
+  }
 
   /// Tries to clone the request builder. Returns null if the body is a stream.
   RequestBuilder? tryClone() {
@@ -114,7 +143,11 @@ class RequestBuilder {
             version: _version);
     }
   }
-// version // todo
+
+  /// Set HTTP version
+  void version(Version version) {
+    _version = version;
+  }
 
   void _headerAdd(String key, String value) {
     final headerValues = (_headers[key] ??= <String>[]);
